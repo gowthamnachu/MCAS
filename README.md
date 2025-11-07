@@ -1,16 +1,150 @@
-The digital landscape of the 21st century is characterized by an unprecedented reliance on interconnected systems for communication, commerce, and critical infrastructure. The large-scale systems are all around and exist in diverse fields such as complex chemical process, biomedical systems, social economics systems, transportation systems, ecological systems, electric power systems, aeronautics and astronautics hydraulic pneumatic, and thermal, mechanical environment systems etc. A system is said to be large scale if it can be decoupled or partitioned into a number of interconnected systems or small-scale systems for either computational or practical reasons. With this increasing integration comes a proportional rise in cybersecurity threats, making robust user authentication a cornerstone of digital security. Traditional authentication methods, such as passwords and PINs, have proven vulnerable to a variety of attacks, including phishing, brute-force, and social engineering. Even two-factor authentication (2FA), while an improvement, can be compromised.
+# Morse Code Blink Authentication System
 
-This project explores the development of a Multisensory Cybersecurity Authentication System, a novel approach that moves beyond conventional methods by integrating multiple biometric and behavioral modalities. The core premise is that by combining data from different human senses and actions—such as sight, sound, and movement—we can create a more secure, resilient, and user-friendly authentication process. This system aims to leverage unique physiological and behavioral traits, such as eye blinks, voice patterns, and keystroke dynamics, to create a layered security protocol. Each modality acts as an independent check, and their fusion creates a composite authentication score that is significantly harder to spoof than any single factor. This report details the design, literature survey, and implementation of a key component of this system: a Blink-PIN authentication module that uses computer vision to translate a user's eye-blink patterns into a secure PIN.
+A novel authentication system using **Morse code-inspired blink patterns** for secure, hands-free login.
 
+- **Quick blink (< 0.4s)** = "dit" (dot) = **0**
+- **Long blink (≥ 0.4s)** = "dah" (dash) = **1**
 
-The field of user authentication has evolved significantly from simple knowledge-based factors (passwords) to include possession-based factors (tokens) and inherence-based factors (biometrics). The limitations of single-factor authentication have been well-documented, leading to the widespread adoption of Multi-Factor Authentication (MFA). However, even traditional MFA systems can be susceptible to sophisticated attacks. This has spurred research into more advanced, context-aware, and continuous authentication mechanisms, with a strong focus on biometrics.
+Register a 4-bit PIN using blink patterns and authenticate with the same Morse-like timing logic.
 
-Biometric authentication leverages unique physiological or behavioral characteristics. Physiological biometrics include fingerprint scanning, iris recognition, facial recognition, and DNA analysis. These methods offer high accuracy but can be intrusive and sometimes require specialized hardware. Behavioral biometrics, on the other hand, analyze patterns in human activities, such as gait, signature dynamics, keystroke patterns, and voice recognition. While potentially less precise than physiological methods, they offer the advantage of being non-intrusive and can be used for continuous authentication, constantly verifying the user's identity throughout a session.
+## Requirements
 
-The concept of a multisensory or multimodal biometric system is a direct response to the weaknesses of unimodal systems. A system that relies on only one identifier is vulnerable to spoofing (e.g., using a high-resolution photo to fool a facial recognition system) and suffers from non-universality (e.g., a user with a hand injury cannot use a fingerprint scanner). By combining multiple, uncorrelated biometric traits, a multimodal system enhances security and reliability. For instance, fusing facial recognition with voice recognition ensures that an attacker would need to replicate both the user's appearance and voice simultaneously, a significantly more complex task.
+- Python 3.10 – 3.12
+- OpenCV: `opencv-python`
+- MediaPipe: `mediapipe`
+- NumPy: `numpy`
 
-Recent research has focused on novel biometric modalities that are difficult to replicate. Eye-blink detection, the focus of our implementation, is one such promising area. Blinks are a natural, subconscious action, but their duration and frequency can be controlled voluntarily to input a code. This makes it a "covert" biometric that is difficult for an observer to steal. Several studies have explored the use of the Eye Aspect Ratio (EAR) to detect blinks in real-time video streams. Bandyopadhyay et al. [1] extended the fixed parameter reduction methods to deal with interval systems. In the study by Bandyopadhyay et al. [1], the reduction method is found by using the Routh-Pade approximation technique to deal with interval systems. Later, Hwang and Yang [2] said that the Routh approximation method may loss its stability preservation property due to irreversibility of interval arithmetic operation. Later, Dolgin and Zeheb [3] and Yang [4] proposed the modified Routh-Pade approximation method to avoid limitations of [2]. These foundational concepts in system analysis can be adapted to the processing of biometric signals, where stability and accuracy are paramount.
+## Install
 
-The integration of different sensory inputs is another key area of research. A true multisensory system might combine visual input (blink patterns, facial recognition), auditory input (voice commands, speaker identification), and even haptic or gestural input. For example, a system could require a user to say a specific phrase while performing a unique sequence of head movements or blinks. This creates a "biometric signature" that is highly personal and dynamic. The challenge lies in the fusion of this data. Fusion can occur at different levels: sensor level, feature level, matching score level, or decision level. Decision-level fusion, where each biometric subsystem makes an initial decision and a final decision is made by combining them, is often preferred for its simplicity and robustness.
+```powershell
+pip install opencv-python mediapipe numpy
+```
 
-Furthermore, the application of machine learning and artificial intelligence is transforming the field. Deep learning models, particularly Convolutional Neural Networks (CNNs), have shown remarkable success in facial and iris recognition. Recurrent Neural Networks (RNNs) are well-suited for analyzing sequential data like voice patterns and keystroke dynamics. A multisensory system could employ a dedicated model for each modality and a final meta-learner to fuse the outputs and make a highly accurate authentication decision. This approach not only improves security but also allows the system to adapt to subtle changes in a user's biometrics over time, a concept known as template aging. The ultimate goal is to create a system that is not only secure but also seamless, providing a frictionless experience where the user is authenticated passively and continuously in the background. Our project contributes to this vision by developing and demonstrating a robust module for one such novel modality: blink-based PIN entry.
+## Register a user PIN
+
+```powershell
+python register_pin.py
+```
+
+- Enter a username when prompted.
+- Perform 4 blinks to set your PIN:
+  - Quick blink (< 0.4s) = 0
+  - Long blink (≥ 0.4s) = 1
+- Press `r` to reset or `q` to quit.
+- The PIN is stored as a SHA-256 hash in `users.json` in this folder.
+
+## Authenticate
+
+```powershell
+python blink_pin_fixed.py
+```
+
+- Enter the same username used during registration.
+- Blink the same 4-bit sequence.
+- Success/failure will be shown in the console and on-screen.
+
+## Notes
+
+- Thresholds and logic are shared via `blink_utils.py`.
+- The system uses MediaPipe FaceMesh and an Eye Aspect Ratio (EAR)-based blink detector.
+- Camera defaults to 640x480; adjust if needed.
+
+---
+
+## 🎯 Use Cases
+
+### 1. **Emergency & Covert Communication**
+- **Hostage situations**: Authenticate identity or send distress signals without speaking
+- **Undercover operations**: Law enforcement can verify identity silently
+- **Silent alarms**: Trigger security alerts through blink patterns without alerting threats
+- **Kidnapping scenarios**: Victims can signal SOS using Morse-coded blinks
+
+### 2. **Military & Defense Applications**
+- **Tactical authentication**: Soldiers authenticate in radio-silent operations
+- **POW identification**: Verify identity through blink codes in videos
+- **Secure facility access**: Authenticate without physical tokens in classified areas
+- **Covert messaging**: Send Morse-encoded messages through security cameras
+
+### 3. **Medical & Healthcare**
+- **Locked-in syndrome patients**: Communication for patients who can only control eye movement
+- **Post-stroke rehabilitation**: Assess blink control and cognitive function
+- **ICU patient authentication**: Verify patient identity when they cannot speak
+- **Anesthesia awareness**: Monitor patient consciousness through blink responses
+
+### 4. **Accessibility & Assistive Technology**
+- **ALS/Motor Neuron Disease**: Alternative input for users who retain eye control
+- **Severe paralysis**: Authentication for users with limited voluntary movement
+- **Speech impairment**: Non-verbal authentication and communication
+- **Brain-computer interface training**: Learn to control blink patterns for device control
+
+### 5. **Privacy & Anti-Surveillance**
+- **Public authentication**: No visible PIN pad for observers to record
+- **Counter-surveillance**: Authenticate without leaving traces on input devices
+- **Photographic evidence**: Verify identity in photos/videos through blink patterns
+- **Deepfake detection**: Challenge-response blink patterns harder to fake in real-time
+
+### 6. **Educational & Training**
+- **Morse code learning**: Interactive way to practice Morse code (dit/dah as blinks)
+- **Signal training**: First responders, pilots, military learn visual communication
+- **STEM education**: Demonstrate computer vision, pattern recognition, cryptography
+- **Accessibility awareness**: Train professionals on alternative communication methods
+
+### 7. **Aviation & Maritime**
+- **Pilot distress signals**: Detect blink-based SOS from incapacitated pilots
+- **Submarine communications**: Silent authentication in sound-sensitive environments
+- **Aircraft hijacking**: Pilots signal duress through pre-arranged blink codes
+- **Naval operations**: Radio-silent authentication protocols
+
+### 8. **Banking & Financial Security**
+- **ATM anti-coercion**: Blink a "duress PIN" to silently alert authorities
+- **High-value transactions**: Multi-factor authentication using blink-Morse code
+- **Elderly banking**: Alternative for customers who struggle with PIN pads
+- **Biometric vault access**: Combined face recognition + blink-code verification
+
+### 9. **IoT & Smart Devices**
+- **Smart glasses authentication**: Unlock AR glasses through eye-tracking cameras
+- **Bathroom smart mirrors**: Authenticate to load personalized settings
+- **Car driver identification**: Verify driver through dashboard cameras
+- **Smart home security**: Alternative for users who forget traditional passwords
+
+### 10. **Research & Development**
+- **Cognitive load studies**: Measure user attention during blink authentication
+- **Liveness detection**: Distinguish real blinks from replayed videos
+- **Pattern recognition AI**: Train models to detect intentional vs. involuntary blinks
+- **Human-computer interaction**: Study alternative input modalities
+
+---
+
+## ✅ Unique Advantages
+
+- **Universally recognizable**: Morse code timing (dit/dah) is internationally known
+- **Cultural/historical significance**: Military, maritime, emergency responders trained in Morse
+- **Dual-purpose**: Works for both authentication AND communication
+- **Timing-based security**: Harder to replay (requires precise timing replication)
+- **No language barrier**: Binary encoding works across all languages
+- **Hands-free**: Perfect for situations where hands are occupied or unavailable
+- **Privacy-enhanced**: No physical keyboard input to observe or record
+
+---
+
+## ⚠️ Limitations
+
+- **Timing precision**: Requires consistent dit/dah duration control
+- **Learning curve**: Users need to remember their blink pattern
+- **Eye fatigue**: Extended use can cause eye strain
+- **Lighting dependent**: Requires adequate lighting for face detection
+- **Speed trade-off**: Slower than traditional PIN entry
+- **Medical conditions**: Not suitable for users with certain eye/neurological conditions
+
+---
+
+## 🚨 Critical Use Case: Distress Signaling
+
+The most powerful application is **silent distress communication**:
+
+- Hostages can blink **SOS** (`... --- ...` = short-short-short-long-long-long-short-short-short)
+- Undercover agents verify identity through pre-arranged Morse patterns
+- Medical patients signal **YES** or **NO** responses
+- Covert operations require silent authentication without verbal/physical interaction
+
+This transforms authentication into a **multi-purpose covert communication tool** with historical precedent and universal recognition! 🎖️
