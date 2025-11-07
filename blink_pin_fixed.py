@@ -1,5 +1,5 @@
 """
-Blink-PIN Authentication System (Fixed MediaPipe version)
+Morse code based Authentication System (Fixed MediaPipe version)
 
 This script uses MediaPipe's face mesh to detect blinks and convert them to a PIN.
 The EAR calculation has been fixed to work properly with MediaPipe landmarks.
@@ -19,24 +19,26 @@ import time
 import numpy as np
 import hashlib
 import mediapipe as mp
+from blink_utils import (
+    BLINK_TO_DIGIT,
+    EAR_THRESHOLD,
+    BLINK_DURATION_THRESHOLD,
+    MIN_BLINK_INTERVAL,
+    CONSEC_FRAMES,
+    MAX_BLINKS,
+    LEFT_EYE_LANDMARKS,
+    RIGHT_EYE_LANDMARKS,
+    calculate_ear,
+    get_landmark_coords,
+    create_face_mesh,
+    hash_pin,
+    get_user_pin_hash,
+)
 
 # -------------------
 # CONFIGURATION
 # -------------------
-PIN = "0101"  
-MAX_BLINKS = 4
-
-# Thresholds (properly calibrated)
-EAR_THRESHOLD = 0.25  # Standard threshold for blink detection
-BLINK_DURATION_THRESHOLD = 0.4  # Quick vs Long blink
-MIN_BLINK_INTERVAL = 0.5  # Minimum time between blinks
-CONSEC_FRAMES = 3  # Consecutive frames to confirm blink
-
-# Mappings
-BLINK_TO_DIGIT = {
-    "quick": "0",
-    "long": "1"
-}
+PIN = None  # Loaded per user
 
 # -------------------
 # HELPER FUNCTIONS
@@ -91,28 +93,19 @@ def get_landmark_coords(landmarks, indices, width, height):
 # -------------------
 
 # Initialize MediaPipe
-mp_face_mesh = mp.solutions.face_mesh
-mp_drawing = mp.solutions.drawing_utils
-
-# Correct MediaPipe eye landmark indices for EAR calculation
-# Left eye: outer corner, top, top, inner corner, bottom, bottom
-LEFT_EYE_LANDMARKS = [33, 160, 158, 133, 153, 144]  # 6 points for left eye EAR
-RIGHT_EYE_LANDMARKS = [362, 385, 387, 263, 373, 380]  # 6 points for right eye EAR
-
-# Initialize face mesh
-face_mesh = mp_face_mesh.FaceMesh(
-    max_num_faces=1,
-    refine_landmarks=True,
-    min_detection_confidence=0.5,
-    min_tracking_confidence=0.5
-)
+face_mesh = None
 
 # -------------------
 # MAIN PROGRAM
 # -------------------
 
 print("[INFO] Initializing Blink-PIN Authentication System")
-print(f"[INFO] Target PIN: {PIN}")
+username = input("Enter username for authentication: ").strip()
+stored_hash = get_user_pin_hash(username)
+if not stored_hash:
+    print(f"[ERROR] No PIN registered for user '{username}'. Please run register_pin.py first.")
+    exit()
+print(f"[INFO] Loaded stored PIN hash for user '{username}'.")
 print("[INFO] Quick blink = 0, Long blink = 1")
 print("[INFO] Press 'q' to quit, 'r' to reset")
 
@@ -136,6 +129,9 @@ last_blink_time = 0
 consec_blinks = 0
 
 print("[INFO] Camera initialized. Starting detection...")
+
+# Initialize face mesh after we have a valid user and camera
+face_mesh = create_face_mesh()
 
 while True:
     ret, frame = cap.read()
@@ -281,7 +277,8 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-face_mesh.close()
+if face_mesh is not None:
+    face_mesh.close()
 
 # Validate PIN
 if len(blink_sequence) >= MAX_BLINKS:
@@ -289,16 +286,17 @@ if len(blink_sequence) >= MAX_BLINKS:
     
     print(f"\nBlink sequence: {blink_sequence}")
     print(f"Entered PIN: {entered_pin}")
-    print(f"Expected PIN: {PIN}")
     
-    if hash_pin(entered_pin) == hash_pin(PIN):
-        print("\n" + "="*35)
+    if hash_pin(entered_pin) == stored_hash:
+        print("\n" + "="*50)
         print("   🎉 AUTHENTICATION SUCCESS! 🎉")
-        print("="*35)
+        print(f"   Welcome back, {username}!")
+        print("="*50)
     else:
-        print("\n" + "="*35)
+        print("\n" + "="*50)
         print("   ❌ AUTHENTICATION FAILED ❌")
-        print("="*35)
+        print(f"   Invalid PIN for user '{username}'")
+        print("="*50)
 else:
     print("\n[INFO] PIN entry incomplete")
 
